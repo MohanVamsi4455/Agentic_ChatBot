@@ -1,0 +1,33 @@
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+
+# Local SQLite databases & cache
+*.db
+*.db-shm
+*.db-wal
+chatbot.db
+chatbot.db-shm
+chatbot.db-wal
+
+# FAISS vector store generated on disk
+faiss_indexes/
+
+# Streamlit secrets and runtime data
+.streamlit/secrets.toml
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+

@@ -1,0 +1,92 @@
+name: Agentic Chatbot CI/CD Deployment with GitHub Actions on AWS
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: agentic-chatbot
+  CONTAINER_NAME: agentic-chatbot-app
+  PORT: 8501
+
+jobs:
+  # ====================================================================
+  # Stage 1: Build Docker Image & Push to Docker Hub (Runs on GitHub Runner)
+  # ====================================================================
+  build-and-push-docker-image:
+    name: Build & Push Docker Image to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ====================================================================
+  # Stage 2: Pull & Run Docker Image on AWS EC2 (Runs on EC2 Self-Hosted Runner)
+  # ====================================================================
+  deploy-to-ec2:
+    name: Pull & Launch Docker Container on AWS EC2
+    needs: build-and-push-docker-image
+    runs-on: self-hosted
+
+    steps:
+      - name: Log in to Docker Hub on EC2
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Pull Latest Docker Image from Docker Hub
+        run: |
+          docker pull ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Stop and Remove Old Container (if running)
+        run: |
+          docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+          docker rm ${{ env.CONTAINER_NAME }} 2>/dev/null || true
+
+      - name: Launch New Docker Container on EC2
+        run: |
+          docker run -d \
+            --name ${{ env.CONTAINER_NAME }} \
+            --restart unless-stopped \
+            -p ${{ env.PORT }}:8501 \
+            -v agentic_chatbot_data:/app/persistent_data \
+            -e DATA_DIR=/app/persistent_data \
+            -e GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}" \
+            -e GOOGLE_API_KEY="${{ secrets.GOOGLE_API_KEY || secrets.GEMINI_API_KEY }}" \
+            -e TAVILY_API_KEY="${{ secrets.TAVILY_API_KEY }}" \
+            -e WEATHER_STACK_API_KEY="${{ secrets.WEATHER_STACK_API_KEY }}" \
+            -e ALPHA_VANTAGE_API_KEY="${{ secrets.ALPHA_VANTAGE_API_KEY }}" \
+            -e LANGSMITH_TRACING="${{ secrets.LANGSMITH_TRACING }}" \
+            -e LANGSMITH_ENDPOINT="${{ secrets.LANGSMITH_ENDPOINT }}" \
+            -e LANGSMITH_API_KEY="${{ secrets.LANGSMITH_API_KEY }}" \
+            -e LANGSMITH_PROJECT="${{ secrets.LANGSMITH_PROJECT }}" \
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Clean up Dangling Images
+        run: |
+          docker image prune -f
+
+      - name: Verify Running Container Status
+        run: |
+          sleep 5
+          docker ps --filter "name=${{ env.CONTAINER_NAME }}"

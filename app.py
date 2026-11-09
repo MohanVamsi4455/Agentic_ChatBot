@@ -301,7 +301,7 @@ with st.sidebar:
 
 
 # ---------------------------- main chat area ----------------------------
-st.markdown('<p class="app-title">Agentic ChatBot</p>', unsafe_allow_html=True)
+st.markdown('<p class="app-title">🙂 Agentic ChatBot</p>', unsafe_allow_html=True)
 st.markdown(
     '<p class="app-subtitle">Ask anything — each conversation keeps its own memory.</p>',
     unsafe_allow_html=True,

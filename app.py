@@ -14,7 +14,7 @@ from rag_tool import ingest_pdf, list_documents, delete_documents
 
 # ---------------------------- page setup ----------------------------
 st.set_page_config(
-    page_title="Agentic ChatBot",
+    page_title="🤖 Agentic ChatBot 🚀",
     page_icon="🤖",
     layout="centered",
     initial_sidebar_state="expanded",
@@ -260,8 +260,8 @@ config = {
 
 # ---------------------------- sidebar ----------------------------
 with st.sidebar:
-    st.markdown("## 🤖 Agentic ChatBot")
-    st.caption("Powered by LangGraph + Gemini")
+    st.markdown("## 🤖 Agentic ChatBot 🚀")
+    st.caption("⚡ Powered by LangGraph + Gemini")
 
     if st.button("➕  New chat", use_container_width=True, type="primary"):
         reset_chat()
@@ -301,9 +301,9 @@ with st.sidebar:
 
 
 # ---------------------------- main chat area ----------------------------
-st.markdown('<p class="app-title">🙂 Agentic ChatBot</p>', unsafe_allow_html=True)
+st.markdown('<p class="app-title">🤖 Agentic ChatBot 🚀 ✨</p>', unsafe_allow_html=True)
 st.markdown(
-    '<p class="app-subtitle">Ask anything — each conversation keeps its own memory.</p>',
+    '<p class="app-subtitle">⚡ Powered by LangGraph + Gemini · Persistent Memory 🧠</p>',
     unsafe_allow_html=True,
 )
 
